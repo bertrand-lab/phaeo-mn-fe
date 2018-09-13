@@ -14,23 +14,42 @@ library(gridExtra)
 library(ggfortify)
 library(testthat)
 
+
+# checks for directory structure
+
+if(!dir.exists('data/')){
+  warning('no directory for data')
+}
+
+if(!dir.exists("figures/")){
+  warning('no directory for figures')
+}
+
+if(!dir.exists("data/intermediate-data/")){
+  warning('no directory for intermediate data')
+}
+
+
 # reading in Miao-prepped excel sheet
 
-annot <- read_excel(path = 'data/Phaeocystis_MnFe_MW_EB_forScott.xlsx', sheet = 1)
-just_annot <- annot[,c(1, 20:ncol(annot))]
+
+just_annot <- read_excel(path = 'data/SupplementalFileS1.xlsx', sheet = 2)
 names(just_annot)[1] <- "protein_id"
 
 # Reading in PD data ------------------------------------------------------
 
 # Reading in PD data:
 
-pd1 <- read_excel(path = 'data/Dataset 1_1F2F_.xlsx')
-pd2 <- read_excel(path = 'data/Dataset 2 1F2F_.xlsx')
+# reading from SupplementalFileS2.xlsx
 
-# subsetting PD to just ID
+pd1 <- read_excel(path = 'data/SupplementalFileS2.xlsx', sheet = 5)
 
-pd1_sub <- pd1[, c(3, 34:43)]
-pd2_sub <- pd2[, c(3, 28:37)]
+pd1_sub <- test[ ,c(which(names(test) =='Accession'), 
+                     which(names(test) == 'Abundance: F1: 126, Sample, OL, FeMn'):which(names(test) == 'Abundance: F1: 131, Control, HL, FeMn'))]
+
+pd2 <- read_excel(path = 'data/SupplementalFileS2.xlsx', sheet = 6)
+pd2_sub <- test[ ,c(which(names(test) =='Accession'), 
+                     which(names(test) == 'Abundance: F1: 126, Sample, LL, FeX'):which(names(test) == 'Abundance: F1: 131, Control, HL, FeMn'))]
 
 # changing the column names in the files
 pd1_names <- c('protein_id', 'ol_highmn_highfe_1_1', 'ol_highmn_highfe_2_1', 'ol_highmn_highfe_3_1', 'll_highmn_highfe_1_1', 'll_highmn_highfe_2_1', 'll_highmn_highfe_3_1', 'll_lowmn_highfe_1_1', 'll_lowmn_highfe_2_1', 'hl_highmn_highfe_1_1', 'hl_highmn_highfe_2_1')
