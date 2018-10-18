@@ -32,7 +32,6 @@ if(!dir.exists("data/intermediate-data/")){
 
 # reading in Miao-prepped excel sheet
 
-
 just_annot <- read_excel(path = 'data/SupplementalFileS1.xlsx', sheet = 2)
 names(just_annot)[1] <- "protein_id"
 
@@ -44,12 +43,12 @@ names(just_annot)[1] <- "protein_id"
 
 pd1 <- read_excel(path = 'data/SupplementalFileS2.xlsx', sheet = 5)
 
-pd1_sub <- test[ ,c(which(names(test) =='Accession'), 
-                     which(names(test) == 'Abundance: F1: 126, Sample, OL, FeMn'):which(names(test) == 'Abundance: F1: 131, Control, HL, FeMn'))]
+pd1_sub <- pd1[ ,c(which(names(pd1) =='Accession'), 
+                     which(names(pd1) == 'Abundance: F1: 126, Sample, OL, FeMn'):which(names(pd1) == 'Abundance: F1: 131, Control, HL, FeMn'))]
 
 pd2 <- read_excel(path = 'data/SupplementalFileS2.xlsx', sheet = 6)
-pd2_sub <- test[ ,c(which(names(test) =='Accession'), 
-                     which(names(test) == 'Abundance: F1: 126, Sample, LL, FeX'):which(names(test) == 'Abundance: F1: 131, Control, HL, FeMn'))]
+pd2_sub <- pd2[ ,c(which(names(pd2) =='Accession'), 
+                     which(names(pd2) == 'Abundance: F1: 126, Sample, LL, FeX'):which(names(pd2) == 'Abundance: F1: 131, Control, HL, FeMn'))]
 
 # changing the column names in the files
 pd1_names <- c('protein_id', 'ol_highmn_highfe_1_1', 'ol_highmn_highfe_2_1', 'ol_highmn_highfe_3_1', 'll_highmn_highfe_1_1', 'll_highmn_highfe_2_1', 'll_highmn_highfe_3_1', 'll_lowmn_highfe_1_1', 'll_lowmn_highfe_2_1', 'hl_highmn_highfe_1_1', 'hl_highmn_highfe_2_1')
@@ -458,22 +457,22 @@ dev.off()
 #      labels = labels,
 #      xpd = TRUE)
 # 
-# sl_light <- sl_normalization(protein_df = pd_light_all,
-#                              tmt1 = c(4:11),
-#                              tmt2 = c(1:3),
-#                              box_labels = names(pd_light))
-# 
-# irs_light <- irs_normalization(sl_normalized_list = sl_light,
-#                                tmt1_common_channel = c("hl_highmn_highfe_1_1", "hl_highmn_highfe_2_1"),
-#                                tmt2_common_channel = c("hl_highmn_highfe_1_2", "hl_highmn_highfe_2_2"),
-#                                tmt1 = c(4:11),
-#                                tmt2 = c(1:3),
-#                                box_labels = names(pd_light))
-# 
-# tmm_light <- tmm_normalization(irs_normalized_df = irs_light,
-#                                tmt1 = c(4:11),
-#                                tmt2 = c(1:3),
-#                                box_labels = names(pd_light))
+sl_light <- sl_normalization(protein_df = pd_light_all,
+                             tmt1 = c(4:11),
+                             tmt2 = c(1:3),
+                             box_labels = names(pd_light))
+
+irs_light <- irs_normalization(sl_normalized_list = sl_light,
+                               tmt1_common_channel = c("hl_highmn_highfe_1_1", "hl_highmn_highfe_2_1"),
+                               tmt2_common_channel = c("hl_highmn_highfe_1_2", "hl_highmn_highfe_2_2"),
+                               tmt1 = c(4:11),
+                               tmt2 = c(1:3),
+                               box_labels = names(pd_light))
+
+tmm_light <- tmm_normalization(irs_normalized_df = irs_light,
+                               tmt1 = c(4:11),
+                               tmt2 = c(1:3),
+                               box_labels = names(pd_light))
 # dev.off()
 
 tmm_light_prots <- data.frame(protein_id = pd_light_all_prots$protein_id, tmm_light)
@@ -513,20 +512,20 @@ dev.off()
 #      labels = labels, 
 #      xpd = TRUE)
 # 
-# sl_metal <- sl_normalization(protein_df = pd_metal_all,
-#                              tmt1 = c(8:12, 15:16),
-#                              tmt2 = c(1:7, 13:14),
-#                              box_labels = names(pd_metal))
-# irs_metal <- irs_normalization(sl_normalized_list = sl_metal,
-#                                tmt1_common_channel = c("hl_highmn_highfe_1_1", "hl_highmn_highfe_2_1"), 
-#                                tmt2_common_channel = c("hl_highmn_highfe_1_2", "hl_highmn_highfe_2_2"),
-#                                tmt1 = c(8:12, 15:16),
-#                                tmt2 = c(1:7, 13:14),
-#                                box_labels = names(pd_metal))
-# tmm_metal <- tmm_normalization(irs_normalized_df = irs_metal, 
-#                                tmt1 = c(8:12, 15:16),
-#                                tmt2 = c(1:7, 13:14),
-#                                box_labels = names(pd_metal))
+sl_metal <- sl_normalization(protein_df = pd_metal_all,
+                             tmt1 = c(8:12, 15:16),
+                             tmt2 = c(1:7, 13:14),
+                             box_labels = names(pd_metal))
+irs_metal <- irs_normalization(sl_normalized_list = sl_metal,
+                               tmt1_common_channel = c("hl_highmn_highfe_1_1", "hl_highmn_highfe_2_1"),
+                               tmt2_common_channel = c("hl_highmn_highfe_1_2", "hl_highmn_highfe_2_2"),
+                               tmt1 = c(8:12, 15:16),
+                               tmt2 = c(1:7, 13:14),
+                               box_labels = names(pd_metal))
+tmm_metal <- tmm_normalization(irs_normalized_df = irs_metal,
+                               tmt1 = c(8:12, 15:16),
+                               tmt2 = c(1:7, 13:14),
+                               box_labels = names(pd_metal))
 # 
 # dev.off()
 
