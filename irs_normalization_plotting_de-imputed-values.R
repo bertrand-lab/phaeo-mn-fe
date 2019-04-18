@@ -6,6 +6,13 @@
 
 # Code in this script is modelled after https://github.com/pwilmart/IRS_normalization
 
+
+############## NOTE
+
+# this script imputes values if one TMT channel is missing. The imputed value is equal to 0.5* lowest value observed
+
+##############
+
 library(tidyverse)
 library(edgeR)
 library(readxl)
@@ -13,6 +20,7 @@ library(gridExtra)
 library(ggfortify)
 library(testthat)
 
+'%!in%' <- function(x,y)!('%in%'(x,y))
 
 # checks for directory structure
 
@@ -28,25 +36,74 @@ if(!dir.exists("data/intermediate-data/")){
   warning('no directory for intermediate data')
 }
 
-# reading in Miao-prepped excel sheet
-
-just_annot <- read_excel(path = 'data/SupplementalFileS1.xlsx', sheet = 2)
-names(just_annot)[1] <- "protein_id"
 
 # Reading in PD data ------------------------------------------------------
 
-# Reading in PD data:
+## reading in new database searches with repaired gene model for PSI
 
-# reading from SupplementalFileS2.xlsx
+just_annot2_a <- read_excel(path = 'data/annotation_Pa1374_PsaABchange.asc.xlsx', sheet = 1)
+just_annot_appended <- read_excel(path = 'data/annotation_Pa1374_contigs_appended.xlsx')
 
-pd1 <- read_excel(path = 'data/SupplementalFileS2.xlsx', sheet = 5)
+# there were 61 contigs that were not included in the transcriptome annotation file
+# this was because they were low abundant transcripts. We identified 3 of them in the 
+# proteome (across all 20 or 19 channels), and manually annotated them with BLASTP.
+just_annot2 <- rbind(just_annot2_a, just_annot_appended)
 
-pd1_sub <- pd1[ ,c(which(names(pd1) =='Accession'),
-                     which(names(pd1) == 'Abundance: F1: 126, Sample, OL, FeMn'):which(names(pd1) == 'Abundance: F1: 131, Control, HL, FeMn'))]
+names(just_annot2)[1] <- "protein_id"
 
-pd2 <- read_excel(path = 'data/SupplementalFileS2.xlsx', sheet = 6)
-pd2_sub <- pd2[ ,c(which(names(pd2) =='Accession'),
-                     which(names(pd2) == 'Abundance: F1: 126, Sample, LL, FeX'):which(names(pd2) == 'Abundance: F1: 131, Control, HL, FeMn'))]
+# reading in data from proteome discoverer
+pd_2_w_crap <- read.csv('data/170529_0692_097_repeat2019_Proteins.txt', sep = '\t')
+
+# converting columns to appropriate ones
+pd_2_w_crap$Checked <- as.logical(pd_2_w_crap$Checked)
+
+pd_2_w_crap$Protein.FDR.Confidence.Combined <- as.character(pd_2_w_crap$Protein.FDR.Confidence.Combined)
+pd_2_w_crap$Master <- as.character(pd_2_w_crap$Master)
+pd_2_w_crap$Accession <- as.character(pd_2_w_crap$Accession)
+pd_2_w_crap$Description <- as.character(pd_2_w_crap$Description)
+
+# remove the contaminant matches ('cRAP_')
+pd_2_no_impute <- pd_2_w_crap[which(!grepl(pattern = 'cRAP_', x = pd_2_w_crap$Accession)), ]
+
+# imputing function for pd_output (note that it's specific for this file)
+impute_values <- function(pd_output_df){
+  
+  # pd_output_df <- tester
+  
+  for(i in 1:nrow(pd_output_df)){
+    
+    # i <- 87
+    number_of_nas <- sum(is.na(pd_output_df[i,c(18:37)]))
+    
+    
+    if(number_of_nas == 1){ # if there is only one na in the row, then replace it with half minimum
+      na_index <- which(is.na(pd_output_df[i, c(18:37)])) + 17 # determine where that NA is
+      half_lowest_value <- 0.5*min(pd_output_df[i, c(18:37)], na.rm = TRUE) # calculate the imputed value
+      pd_output_df[i, na_index] <- half_lowest_value # replace it! :) 
+    } else if(number_of_nas != 1){
+      next # if there is more or less than 1 NA, then move onto the next one
+    }
+  }
+  
+  return(pd_output_df)
+  
+}
+
+# impute channels with one value missing
+pd_2 <- impute_values(pd_2_no_impute)
+
+# subset pd1 as S01-S10
+pd1_sub_w_cv <- pd_2[c(which(pd_2$`Protein.FDR.Confidence.Combined` == 'High')),
+                     c(which(names(pd_2) == 'Accession'),
+                       which(grepl(pattern = 'S1.10', x = names(pd_2), fixed = TRUE)))]
+pd1_sub <- pd1_sub_w_cv[, which(!grepl(pattern = 'CV.in.Percent', names(pd1_sub_w_cv)))]
+
+
+# subset pd_2 as S11-S20
+pd2_sub_w_cv <- pd_2[c(which(pd_2$`Protein.FDR.Confidence.Combined` == 'High'))
+                     ,c(which(names(pd_2) == 'Accession'),
+                        which(grepl(pattern = 'S11', x = names(pd_2))))]
+pd2_sub <- pd2_sub_w_cv[, which(!grepl(pattern = 'CV.in.Percent', names(pd2_sub_w_cv)))]
 
 
 # changing the column names in the files
@@ -75,7 +132,7 @@ pd_raw <- pd_all[, 2:ncol(pd_all)]
 
 # Plotting raw total intensities ------------------------------------------
 
-png("figures/s2-all-normalization-boxplots.png", width=23*0.75, height=27.94*0.75, units="cm", res=1200)
+png("figures/s2-all-normalization-boxplots-imputed-values.png", width=23*0.75, height=27.94*0.75, units="cm", res=1200)
 
 par(mfrow = c(2, 2), mar = c(7, 6, 4, 2))
 
@@ -237,7 +294,7 @@ sample_df$metal <- paste(sample_df$mn, sample_df$fe, sep = "_")
 injection_pca <- autoplot(pca_data, data = sample_df, colour = 'injection', size = 3)
 injection_pca2 <-  injection_pca + theme_bw() + scale_colour_discrete(name = 'TMT Experiment')
 
-ggsave(injection_pca2, filename = "figures/sx-tmt-pca.png", width = 23*0.65, height = 27.94*0.5, units = "cm")
+ggsave(injection_pca2, filename = "figures/sx-tmt-pca-imputed-values.png", width = 23*0.65, height = 27.94*0.5, units = "cm")
 
 metal_pca <- autoplot(pca_data, 
                       data = sample_df, 
@@ -266,7 +323,7 @@ all_pca <- metal_pca + scale_colour_manual(labels = c("High Mn, High Fe", "High 
                                            name = "Metal") + 
   theme_bw() + scale_shape_discrete(labels = c("High Light", "Low Light", "Ordinary Light"), name = "Light")
 
-ggsave(all_pca, filename = "figures/sx-all-pca.png", width = 23*0.65, height = 27.94*0.5, units = "cm")
+ggsave(all_pca, filename = "figures/sx-all-pca-imputed_values.png", width = 23*0.65, height = 27.94*0.5, units = "cm")
 
 ## It looks like there are separate responses between treatments, but there are only 280 proteins because we cannot normalize what we cannot see. 
 # So what happens when we isolate just the metal response, and just the light response
@@ -560,7 +617,7 @@ light_pca_plot2 <- light_pca_plot + theme_bw() +
                       labels = c('High Light', 'Low Light', 'Ordinary Light'),
                       values = c("#F0E442", "#0072B2", "#D55E00"))
 
-ggsave(light_pca_plot2, filename = "figures/sx-light-pca.png", width = 23*0.65, height = 27.94*0.5, units = "cm")
+ggsave(light_pca_plot2, filename = "figures/sx-light-pca-imputed-values.png", width = 23*0.65, height = 27.94*0.5, units = "cm")
 
 
 # edgeR DE analysis for light ---------------------------------------------
@@ -643,7 +700,7 @@ de_light_2_tab_p <- de_light_2_tab %>%
   ylim(-5, 5) +
   theme(plot.title = element_text(size = 10), legend.position = "none");de_light_2_tab_p
 
-tiff("figures/s5-de-light-plot.tiff", width=23*0.75, height=27.94*0.75, units="cm", res=800)
+tiff("figures/s5-de-light-plot-imputed-values.tiff", width=23*0.75, height=27.94*0.75, units="cm", res=800)
 
 grid.arrange(de_light_1_tab_p, de_light_2_tab_p, nrow = 2)
 
@@ -677,7 +734,7 @@ metal_pca_plot2 <- metal_pca_plot + theme_bw() +
                       labels = c("High Mn, High Fe", "High Mn, Low Fe", "Low Mn, High Fe", "Low Mn, Low Fe"),
                       values = c("#F0E442", "#0072B2", "#D55E00", "grey50"))
 
-ggsave(metal_pca_plot2, filename = "figures/sx-metal-pca.png", width = 23*0.65, height = 27.94*0.5, units = "cm")
+ggsave(metal_pca_plot2, filename = "figures/sx-metal-pca-imputed-values.png", width = 23*0.65, height = 27.94*0.5, units = "cm")
 
 
 # edgeR for metals --------------------------------------------------------
@@ -825,13 +882,13 @@ de_metal_2_low_p <- de_metal_2_low_tab %>%
         text = element_text(family = ''));de_metal_2_low_p
 
 
-tiff("figures/s4-de-plot.tiff", width=23*0.75, height=27.94*0.75, units="cm", res=800)
+tiff("figures/s4-de-plot-imputed-values.tiff", width=23*0.75, height=27.94*0.75, units="cm", res=800)
 
-grid.arrange(de_metal_1_tab_p, de_metal_2_tab_p, de_metal_3_tab_p, de_metal_2_low_p, nrow = 2)
+grid.arrange(de_metal_1_tab_p, de_metal_2_tab_p, de_metal_3_tab_p, de_metal_2_low_p)
 
 dev.off()
 
-png("figures/s3-de-venn-diagrams.png", width=23*0.75, height=27.94*0.75, units="cm", res=800)
+png("figures/s3-de-venn-diagrams-imputed-values.png", width=23*0.75, height=27.94*0.75, units="cm", res=800)
 
 par(mfrow = c(2, 1), 
     mai = c(0, 0, 0, 0))
@@ -874,21 +931,21 @@ light_names <- c('protein_id', 'ol', 'hl')
 de_light <- data.frame(qlf_1$genes, v_presence_light)
 names(de_light) <- light_names
 
-de_metal2 <- inner_join(de_metal, just_annot, by = 'protein_id')
+de_metal2 <- inner_join(de_metal, just_annot2, by = 'protein_id')
 de_metal3 <- inner_join(de_metal2, tmm_metal_prots2, by = 'protein_id')
 
-de_light2 <- inner_join(de_light, just_annot, by = 'protein_id')
+de_light2 <- inner_join(de_light, just_annot2, by = 'protein_id')
 de_light3 <- inner_join(de_light2, tmm_light_prots2, by = 'protein_id')
 
-write.csv(de_light3, 'data/intermediate-data/de-light.csv')
-write.csv(de_metal3, 'data/intermediate-data/de-metal.csv')
+write.csv(de_light3, 'data/intermediate-data/de-light-imputed-values.csv')
+write.csv(de_metal3, 'data/intermediate-data/de-metal-imputed-values.csv')
 
 
 # all normalized values plus the DE values from the metal treatments:
 
 all_norm_pd <- data.frame(protein_id = pd_all$protein_id, data_irs_tmm)
 # adding in the annotation file
-all_norm_annot <- inner_join(all_norm_pd, just_annot, by = 'protein_id')
+all_norm_annot <- inner_join(all_norm_pd, just_annot2, by = 'protein_id')
 
 # adding in the DE values from just the metal
 # subset of DE vals from metal de test
@@ -899,7 +956,7 @@ all_norm_annot_de <- inner_join(all_norm_annot, de_metal3_sub, by = "protein_id"
 de_light3_sub <- de_light3[, c(1:3)]
 all_norm_annot_de_lightmetal <- inner_join(all_norm_annot_de, de_light3_sub, by = "protein_id")
 
-write.csv(all_norm_annot_de_lightmetal, file = 'data/intermediate-data/all_prots_normalized.csv')
+write.csv(all_norm_annot_de_lightmetal, file = 'data/intermediate-data/all_prots_normalized-imputed-values.csv')
 
 
 

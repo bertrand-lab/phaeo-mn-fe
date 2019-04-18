@@ -62,28 +62,28 @@ size_tuk_l <- TukeyHSD(size_aov_l) %>% tidy()
 # writing anova results to excel file:
 
 # Write the TukeyHSD results from low light into an excel file:
-write.xlsx(chla_tuk, file="data/intermediate-data/phys_anova_low_light.xlsx",
+openxlsx::write.xlsx(chla_tuk, file="data/intermediate-data/phys_anova_low_light.xlsx",
            sheetName="chla_tuk", append=FALSE)
 # Add a second data set in a new worksheet
-write.xlsx(fvfm_tuk, file="data/intermediate-data/phys_anova_low_light.xlsx", 
+openxlsx::write.xlsx(fvfm_tuk, file="data/intermediate-data/phys_anova_low_light.xlsx", 
            sheetName="fvfm_tuk", append=TRUE)
 # Add a third data set
-write.xlsx(gr_tuk, file="data/intermediate-data/phys_anova_low_light.xlsx", 
+openxlsx::write.xlsx(gr_tuk, file="data/intermediate-data/phys_anova_low_light.xlsx", 
            sheetName="gr_tuk", append=TRUE)
-write.xlsx(size_tuk, file="data/intermediate-data/phys_anova_low_light.xlsx", 
+openxlsx::write.xlsx(size_tuk, file="data/intermediate-data/phys_anova_low_light.xlsx", 
            sheetName="size_tuk", append=TRUE)
 
 
 # Write the TukeyHSD results from high metal different light into an excel file:
-write.xlsx(chla_tuk_l, file="data/intermediate-data/phys_anova_light_treat.xlsx",
+openxlsx::write.xlsx(chla_tuk_l, file="data/intermediate-data/phys_anova_light_treat.xlsx",
            sheetName="chla_tuk_l", append=FALSE)
 # Add a second data set in a new worksheet
-write.xlsx(fvfm_tuk_l, file="data/intermediate-data/phys_anova_light_treat.xlsx", 
+openxlsx::write.xlsx(fvfm_tuk_l, file="data/intermediate-data/phys_anova_light_treat.xlsx", 
            sheetName="fvfm_tuk_l", append=TRUE)
 # Add a third data set
-write.xlsx(gr_tuk_l, file="data/intermediate-data/phys_anova_light_treat.xlsx", 
+openxlsx::write.xlsx(gr_tuk_l, file="data/intermediate-data/phys_anova_light_treat.xlsx", 
            sheetName="gr_tuk_l", append=TRUE)
-write.xlsx(size_tuk_l, file="data/intermediate-data/phys_anova_light_treat.xlsx", 
+openxlsx::write.xlsx(size_tuk_l, file="data/intermediate-data/phys_anova_light_treat.xlsx", 
            sheetName="size_tuk_l", append=TRUE)
 
 
@@ -95,9 +95,9 @@ p10 <- ggplot(phys_data, aes(x = treat_sum, y = chla)) +
   # annotate("text", x = 0.65, y = 700, label = 'A)', size = 5) +
   ylim(0, 800) + 
   
-  annotate("text", x = 1, y = 760, label = 'italic(a)', parse = TRUE) + 
-  annotate("text", x = 2, y = 760, label = 'italic(b)', parse = TRUE) + 
-  annotate("text", x = 3, y = 760, label = 'italic(c)', parse = TRUE) + 
+  annotate("text", x = 1, y = 760, label = 'italic(a)', parse = TRUE, colour = 'grey50') + 
+  annotate("text", x = 2, y = 760, label = 'italic(b)', parse = TRUE, colour = 'grey50') + 
+  annotate("text", x = 3, y = 760, label = 'italic(c)', parse = TRUE, colour = 'grey50') + 
   
   annotate("text", x = 3, y = 695, label = 'a') + 
   annotate("text", x = 4, y = 695, label = 'ab') + 
@@ -116,9 +116,9 @@ p11 <- ggplot(phys_data, aes(x = treat_sum, y = fvfm)) +
   ylim(0.1, 0.85) +
   
   
-  annotate("text", x = 1, y = 0.82, label = 'italic(a)', parse = TRUE) + 
-  annotate("text", x = 2, y = 0.82, label = 'italic(a)', parse = TRUE) + 
-  annotate("text", x = 3, y = 0.82, label = 'italic(b)', parse = TRUE) + 
+  annotate("text", x = 1, y = 0.82, label = 'italic(a)', parse = TRUE, colour = 'grey50') + 
+  annotate("text", x = 2, y = 0.82, label = 'italic(a)', parse = TRUE, colour = 'grey50') + 
+  annotate("text", x = 3, y = 0.82, label = 'italic(b)', parse = TRUE, colour = 'grey50') + 
   
   # annotate("text", x = 0.65, y = 0.8, label = 'B)', size = 5) +
   annotate("text", x = 3, y = 0.75, label = 'a') +
@@ -158,9 +158,9 @@ p13 <- ggplot(phys_data, aes(x = treat_sum, y = size)) +
   
   # annotate("text", x = 0.65, y = 860000, label = 'D)', size = 5) +
   
-  annotate("text", x = 1, y = 870000, label = 'italic(a)', parse = TRUE) + 
-  annotate("text", x = 2, y = 870000, label = 'italic(b)', parse = TRUE) + 
-  annotate("text", x = 3, y = 870000, label = 'italic(c)', parse = TRUE) + 
+  annotate("text", x = 1, y = 870000, label = 'italic(a)', parse = TRUE, colour = 'grey50') + 
+  annotate("text", x = 2, y = 870000, label = 'italic(b)', parse = TRUE, colour = 'grey50') + 
+  annotate("text", x = 3, y = 870000, label = 'italic(c)', parse = TRUE, colour = 'grey50') + 
   
   annotate("text", x = 3, y = 835000, label = 'a') +
   annotate("text", x = 4, y = 835000, label = 'a') +
