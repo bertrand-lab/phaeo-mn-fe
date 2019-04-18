@@ -2,10 +2,12 @@
 
 This is the github page for a project submitted recently for review. These scripts reproduce the analysis presented in the paper:
 
-`irs_normalization_plotting_dge.R` does the differential expression analyses, produces plots, and produces differential expression spreadsheets as an output.
+`irs_normalization_plotting_de.R` does the differential expression analyses, produces plots, and produces differential expression spreadsheets as an output.
 `phys_anova.R` does the plots, ANOVAs, and Tukeys Post Hoc testing for the physiological data.
 `antarctica_map.R` makes the map shown in Figure 2.
 `peptide_transition_plots.R` is for producing the figures of ion chromatograms.
+'irs_normalization_plotting_de-imputed-values.R' does the same as the differential expression analysis, except it imputes data where proteins are missing from only one channel of 20, and the imputed value is equal to the 
+0.5*minimum value of that channel.
 
 Here is the R session info that details required packages:
 
